@@ -1,1 +1,1 @@
-OnChain : 1 : 1 OnChain : 2 : 2 
+OnChain : 2 : 2 OnChain : 1 : 1 

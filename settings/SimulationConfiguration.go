@@ -1,12 +1,10 @@
 package settings
 
 var NUM_OF_NODES int = 300
-var TABLE string = "BitcoinCoreTable"
-var ALGO string = "ProofOfWork"
 var INTERVAL int = 1000 * 60 * 10 //1000*60;//1000*30*5;//1000*60*10;
 var AVERAGE_MINING_POWER int = 400000
 var STDEV_OF_MINING_POWER int = 100000
-var END_BLOCK_HEIGHT int = 3000
+var END_BLOCK_HEIGHT int = 3
 var BLOCK_SIZE int = 535000 //6110;//8000;//535000;//0.5MB
 var CBR_USAGE_RATE float64 = 0.964
 var CHURN_NODE_RATE float64 = 0.976

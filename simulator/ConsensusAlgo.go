@@ -21,20 +21,20 @@ func (ca *ConsensusAlgo) IsReceivedBlockValid(receivedBlock *Block, currentBlock
 	} else {
 		receivedBlockParent = nil
 	}
-	return (receivedBlockHeight == 0 || receivedBlock.difficulty >= receivedBlockParent.nextDifficulty) && (reflect.ValueOf(currentBlock.parent).IsNil() || receivedBlock.totalDifficulty > currentBlock.totalDifficulty)
+	return (receivedBlockHeight == 0 || receivedBlock.difficulty.Cmp(&receivedBlockParent.nextDifficulty) >= 0) && (reflect.ValueOf(currentBlock.parent).IsNil() || receivedBlock.totalDifficulty.Cmp(&currentBlock.totalDifficulty) > 0)
 }
 
 func (ca *ConsensusAlgo) Minting() *MintingTask {
 	var selfNode = ca.selfNode
 	var parent = selfNode.block
 	var difficulty = parent.nextDifficulty
-	var p = 1.0 / float64(difficulty)
+	var p = 1.0 / float64(difficulty.Int64())
 	var u = rand.Float64()
 	if p <= math.Pow(2, -53) {
 		return nil
 	} else {
 		return &MintingTask{selfNode, selfNode.block, math.Log(u) / math.Log(
-			1.0-p) / float64(selfNode.miningPower), difficulty, 0}
+			1.0/p) / float64(selfNode.miningPower), difficulty, 0}
 	}
 }
 

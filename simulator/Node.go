@@ -10,11 +10,8 @@ import (
 
 type Node struct {
 	nodeID            int
-	numConnection     int
 	region            int
 	miningPower       int
-	routingTableName  string
-	consensusAlgoName string
 	useCBR            bool
 	isChurnNode       bool
 	routingTable      *RoutingTable
@@ -32,9 +29,9 @@ type void struct{}
 var member void
 var processingTime = 2
 
-func MakeNode(nodeID int, numConnection int, region int, miningPower int, routingTableName string, consensusAlgoName string, useCBR bool, isChurnNode bool) *Node {
-	node := &Node{nodeID, numConnection, region, miningPower, routingTableName, consensusAlgoName, useCBR, isChurnNode, nil, nil, nil, nil, nil, false, nil, nil}
-	node.routingTable = &RoutingTable{node, []*Node{}, []*Node{}}
+func MakeNode(nodeID int, numConnection int, region int, miningPower int, useCBR bool, isChurnNode bool) *Node {
+	node := &Node{nodeID, region, miningPower, useCBR, isChurnNode, nil, nil, nil, nil, nil, false, nil, nil}
+	node.routingTable = &RoutingTable{node, numConnection, []*Node{}, []*Node{}}
 	node.consensusAlgo = &ConsensusAlgo{node}
 	node.block = &Block{}
 	node.mintingTask = &MintingTask{}

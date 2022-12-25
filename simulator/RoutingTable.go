@@ -5,9 +5,10 @@ import (
 )
 
 type RoutingTable struct {
-	selfNode *Node
-	outbound []*Node
-	inbound  []*Node
+	selfNode      *Node
+	numConnection int
+	outbound      []*Node
+	inbound       []*Node
 }
 
 func (rt *RoutingTable) GetOutbound() []*Node {
@@ -18,10 +19,6 @@ func (rt *RoutingTable) GetInbound() []*Node {
 	return rt.inbound
 }
 
-func GetNumConnection(this *Node) int {
-	return this.numConnection
-}
-
 func (rt *RoutingTable) GetNeighbors() []*Node {
 	var neighbours []*Node
 	neighbours = append(neighbours, rt.GetOutbound()...)
@@ -30,7 +27,7 @@ func (rt *RoutingTable) GetNeighbors() []*Node {
 }
 
 func (rt *RoutingTable) AddNeighbor(to *Node) bool {
-	if to == rt.selfNode || contains(rt.outbound, to) || contains(rt.inbound, to) || len(rt.outbound) >= rt.selfNode.numConnection {
+	if to == rt.selfNode || contains(rt.outbound, to) || contains(rt.inbound, to) || len(rt.outbound) >= rt.numConnection {
 		return false
 	} else {
 		rt.outbound = append(rt.outbound, to)
@@ -51,8 +48,8 @@ func (rt *RoutingTable) initTable() {
 		candidates[i], candidates[j] = candidates[j], candidates[i]
 	})
 	for i := 0; i < len(candidates); i++ {
-		if len(rt.outbound) < rt.selfNode.numConnection {
-			rt.AddNeighbor(GetSimulatedNodes()[i])
+		if len(rt.outbound) < rt.numConnection {
+			rt.AddNeighbor(GetSimulatedNodes()[candidates[i]])
 		} else {
 			break
 		}

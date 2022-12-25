@@ -1,6 +1,9 @@
 package simulator
 
-import "reflect"
+import (
+	"math/big"
+	"reflect"
+)
 
 type Block struct {
 	id              int
@@ -8,18 +11,18 @@ type Block struct {
 	parent          *Block
 	minter          *Node
 	time            int64
-	difficulty      int
-	totalDifficulty int
-	nextDifficulty  int
+	difficulty      big.Int
+	totalDifficulty big.Int
+	nextDifficulty  big.Int
 }
 
-var genesisNextDifficulty int
+var genesisNextDifficulty big.Int
 var latestid int
 
-func MakeBlock(parent *Block, minter *Node, time int64, difficulty int) *Block {
+func MakeBlock(parent *Block, minter *Node, time int64, difficulty big.Int) *Block {
 	var height int
-	var totalDifficulty int
-	var nextDifficulty int
+	var totalDifficulty big.Int
+	var nextDifficulty big.Int
 
 	if reflect.ValueOf(parent).IsNil() {
 		height = 0
@@ -27,7 +30,7 @@ func MakeBlock(parent *Block, minter *Node, time int64, difficulty int) *Block {
 		nextDifficulty = genesisNextDifficulty
 	} else {
 		height = parent.height + 1
-		totalDifficulty = parent.difficulty + difficulty
+		totalDifficulty = *parent.difficulty.Add(&parent.difficulty, &difficulty)
 		nextDifficulty = parent.nextDifficulty
 	}
 	block := &Block{latestid, height, parent, minter, time, difficulty, totalDifficulty, nextDifficulty}
@@ -40,8 +43,8 @@ func BlockGenesisBlock(minter *Node) *Block {
 	for i := 0; i < len(GetSimulatedNodes()); i++ {
 		totalMiningPower += GetSimulatedNodes()[i].miningPower
 	}
-	genesisNextDifficulty = totalMiningPower * GetTargetInterval()
-	return MakeBlock(nil, minter, 0, 0)
+	genesisNextDifficulty = *big.NewInt(int64(totalMiningPower) * int64(GetTargetInterval()))
+	return MakeBlock(nil, minter, 0, *big.NewInt(0))
 }
 
 func (b *Block) GetBlockWithHeight(height int) *Block {

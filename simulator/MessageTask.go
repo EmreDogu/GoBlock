@@ -1,7 +1,6 @@
 package simulator
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 )
@@ -40,9 +39,6 @@ func RecMessageTask(from *Node, to *Node, block *Block, interval float64) {
 }
 
 func (task *MessageTask) Run() {
-	if task.messageType == "CmpctBlockMessageTask" {
-		fmt.Println("a")
-	}
 	if task.messageType == "BlockMessageTask" || task.messageType == "CmpctBlockMessageTask" {
 		task.from.SendNextBlockMessage()
 
@@ -59,7 +55,5 @@ func (task *MessageTask) Run() {
 			panic(err2)
 		}
 	}
-
 	task.to.ReceiveMessage(task)
-
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	//"container/heap"
+
 	"fmt"
 	"math"
 	"math/rand"
@@ -41,8 +43,9 @@ func main() {
 	currentBlockHeight := 1
 
 	for simulator.Pq.Len() > 0 {
-		if simulator.Pq.GetTaskType(0) == "mintingTask" {
-			if simulator.Pq.GetHeight(0) == currentBlockHeight {
+		if isTest(simulator.GetTask()) {
+			task := simulator.GetMintingTask()
+			if task.GetParent().GetHeight() == currentBlockHeight {
 				currentBlockHeight++
 			}
 			if currentBlockHeight > settings.END_BLOCK_HEIGHT {
@@ -53,16 +56,8 @@ func main() {
 			if currentBlockHeight%100 == 0 || currentBlockHeight == 2 {
 				//writeGraph(currentBlockHeight)
 			}
-			simulator.CurrentTime = simulator.Pq.GetScheduledTime(0)
-			simulator.Pq.GetMintingTask(0).Run()
-			delete(simulator.TaskMap, simulator.Pq.GetMintingTask(0))
-			simulator.Pq.Pop()
-		} else {
-			simulator.CurrentTime = simulator.Pq.GetScheduledTime(0)
-			simulator.Pq.GetMessageTask(0).Run()
-			delete(simulator.TaskMap, simulator.Pq.GetMessageTask(0))
-			simulator.Pq.Pop()
 		}
+		simulator.RunTask()
 	}
 
 	simulator.PrintAllPropagation()
@@ -148,17 +143,17 @@ func main() {
 }
 
 func makeRandomListFollowDistribution(distribution []float64, facum bool) []int {
-	index := 0
 	list := []int{}
+	index := 0
 
 	if facum {
 		for ; index < len(distribution); index++ {
-			for len(list) <= int(float64(settings.NUM_OF_NODES)*distribution[index]) {
+			for float64(len(list)) <= float64(settings.NUM_OF_NODES)*distribution[index] {
 				list = append(list, index)
 			}
 		}
 		for len(list) < settings.NUM_OF_NODES {
-			list = append(list, index-1)
+			list = append(list, index)
 		}
 	} else {
 		var acumulative float64 = 0.0
@@ -169,7 +164,7 @@ func makeRandomListFollowDistribution(distribution []float64, facum bool) []int 
 			}
 		}
 		for len(list) < settings.NUM_OF_NODES {
-			list = append(list, index-1)
+			list = append(list, index)
 		}
 	}
 
@@ -183,7 +178,7 @@ func makeRandomList(rate float64) []bool {
 	list := []bool{}
 
 	for i := 0; i < settings.NUM_OF_NODES; i++ {
-		list = append(list, i < int(float64(settings.NUM_OF_NODES)*rate))
+		list = append(list, (float64(i) < float64(settings.NUM_OF_NODES)*rate))
 	}
 
 	rand.Shuffle(len(list), func(i, j int) {
@@ -198,18 +193,18 @@ func genMiningPower() int {
 }
 
 func constructNetworkWithAllNodes(numNodes int) {
-	var degreeDistribution []float64 = simulator.GetDegreeDistribution()
-	var degreeList []int = makeRandomListFollowDistribution(degreeDistribution, true)
-
 	var regionDistribution []float64 = simulator.GetRegionDistribution()
 	var regionList []int = makeRandomListFollowDistribution(regionDistribution, false)
+
+	var degreeDistribution []float64 = simulator.GetDegreeDistribution()
+	var degreeList []int = makeRandomListFollowDistribution(degreeDistribution, true)
 
 	var useCBRNodes []bool = makeRandomList(settings.CBR_USAGE_RATE)
 
 	var churnNodes []bool = makeRandomList(settings.CHURN_NODE_RATE)
 
 	for id := 1; id <= numNodes; id++ {
-		node := simulator.MakeNode(id, degreeList[id-1]+1, regionList[id-1], genMiningPower(), settings.TABLE, settings.ALGO, useCBRNodes[id-1], churnNodes[id-1])
+		node := simulator.MakeNode(id, degreeList[id-1]+1, regionList[id-1], genMiningPower(), useCBRNodes[id-1], churnNodes[id-1])
 		simulator.AddNode(node)
 
 		f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -226,9 +221,18 @@ func constructNetworkWithAllNodes(numNodes int) {
 	}
 
 	nodes := simulator.GetSimulatedNodes()
-	for i := range simulator.GetSimulatedNodes() {
+	for i := range nodes {
 		nodes[i].JoinNetwork()
 	}
 
 	nodes[0].GenesisBlock()
+}
+
+func isTest(t interface{}) bool {
+	switch t.(type) {
+	case *simulator.MintingTask:
+		return true
+	default:
+		return false
+	}
 }

@@ -19,6 +19,30 @@ var TaskMap = make(map[any]*ScheduledTask)
 var Pq PriorityQueue = make(PriorityQueue, 0)
 var CurrentTime int = 0
 
+func GetPriorityQueue() *PriorityQueue {
+	return &Pq
+}
+
+func GetTask() any {
+	if len(Pq) > 0 {
+		if Pq[0].taskType == "mintingTask" {
+			return Pq[0].mintingTask
+		} else {
+			return Pq[0].messageTask
+		}
+	} else {
+		return nil
+	}
+}
+
+func GetMintingTask() *MintingTask {
+	return Pq[0].mintingTask
+}
+
+func GetScheduledTask() *ScheduledTask {
+	return Pq[0]
+}
+
 func (pq PriorityQueue) Len() int { return len(pq) }
 
 func (pq PriorityQueue) Less(i, j int) bool {
@@ -29,30 +53,6 @@ func (pq PriorityQueue) Swap(i, j int) {
 	pq[i], pq[j] = pq[j], pq[i]
 	pq[i].index = i
 	pq[j].index = j
-	if reflect.ValueOf(pq[i].messageTask).IsNil() {
-		pq[i].mintingTask.index = i
-		pq[j].mintingTask.index = j
-	}
-}
-
-func (pq PriorityQueue) GetHeight(i int) int {
-	return pq[i].mintingTask.minter.block.height
-}
-
-func (pq PriorityQueue) GetMintingTask(i int) *MintingTask {
-	return pq[i].mintingTask
-}
-
-func (pq PriorityQueue) GetMessageTask(i int) *MessageTask {
-	return pq[i].messageTask
-}
-
-func (pq PriorityQueue) GetScheduledTime(i int) int {
-	return int(pq[i].scheduledTime)
-}
-
-func (pq PriorityQueue) GetTaskType(i int) string {
-	return pq[i].taskType
 }
 
 func (pq *PriorityQueue) Push(x any) {
@@ -109,16 +109,33 @@ func putMessageTask(task *MessageTask) {
 }
 
 func removeTask(this *MintingTask) {
+	_, ok := TaskMap[this]
+	// If the key exists
+	if ok {
+		for i := 0; i < len(Pq); i++ {
+			n := Pq[i]
+			if n.mintingTask == this {
+				Pq[i], Pq[len(Pq)-1] = Pq[len(Pq)-1], Pq[i]
+				Pq = Pq[:len(Pq)-1]
+				i--
+			}
+		}
 
-	for i := 0; i < len(Pq); i++ {
-		n := Pq[i]
-		if n.mintingTask == this {
-			Pq[i], Pq[len(Pq)-1] = Pq[len(Pq)-1], Pq[i]
-			Pq = Pq[:len(Pq)-1]
-			i--
+		heap.Init(&Pq)
+		delete(TaskMap, this)
+	}
+}
+
+func RunTask() {
+	if Pq.Len() > 0 {
+		currentTask := GetScheduledTask()
+		heap.Pop(&Pq)
+		CurrentTime = int(currentTask.scheduledTime)
+		delete(TaskMap, currentTask)
+		if reflect.ValueOf(currentTask.messageTask).IsNil() {
+			currentTask.mintingTask.Run()
+		} else {
+			currentTask.messageTask.Run()
 		}
 	}
-
-	heap.Init(&Pq)
-	delete(TaskMap, this)
 }
