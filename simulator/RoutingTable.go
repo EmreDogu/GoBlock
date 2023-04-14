@@ -43,7 +43,6 @@ func (rt *RoutingTable) initTable() {
 	for i := 0; i < len(GetSimulatedNodes()); i++ {
 		candidates = append(candidates, i)
 	}
-	//rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(candidates), func(i, j int) {
 		candidates[i], candidates[j] = candidates[j], candidates[i]
 	})

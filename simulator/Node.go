@@ -93,7 +93,7 @@ func (n *Node) SendInv(block *Block) {
 
 func (n *Node) ReceiveBlock(block *Block) {
 	if n.consensusAlgo.IsReceivedBlockValid(block, n.block) {
-		if !reflect.ValueOf(n.block.parent).IsNil() && !n.block.IsOnSameChainAs(block) {
+		if !reflect.ValueOf(n.block).IsNil() && !n.block.IsOnSameChainAs(block) {
 			n.AddOrphans(n.block, block)
 		}
 		n.AddToChain(block)
@@ -114,7 +114,7 @@ func (n *Node) ReceiveMessage(message *MessageTask) {
 			if n.consensusAlgo.IsReceivedBlockValid(block, n.block) {
 				RecMessageTask(n, from, block, GetLatency(from.region, n.region)+10)
 				n.downloadingBlocks[block] = member
-			} else if block.IsOnSameChainAs(n.block) {
+			} else if !block.IsOnSameChainAs(n.block) {
 				// get new orphan block
 				RecMessageTask(n, from, block, GetLatency(from.region, n.region)+10)
 				n.downloadingBlocks[block] = member

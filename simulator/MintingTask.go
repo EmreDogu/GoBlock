@@ -6,7 +6,7 @@ type MintingTask struct {
 	minter     *Node
 	parent     *Block
 	interval   float64
-	difficulty big.Int
+	difficulty *big.Int
 	index      int
 }
 
@@ -17,8 +17,4 @@ func (task *MintingTask) Run() {
 
 func (task *MintingTask) GetParent() *Block {
 	return task.parent
-}
-
-func (block *Block) GetHeight() int {
-	return block.height
 }

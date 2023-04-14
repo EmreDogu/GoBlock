@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"container/heap"
-
 	"fmt"
 	"math"
 	"math/rand"
@@ -51,11 +49,11 @@ func main() {
 			if currentBlockHeight > settings.END_BLOCK_HEIGHT {
 				break
 			}
-			// Log every 100 blocks and at the second block
+			/*// Log every 100 blocks and at the second block
 			// TODO use constants here
 			if currentBlockHeight%100 == 0 || currentBlockHeight == 2 {
-				//writeGraph(currentBlockHeight)
-			}
+				writeGraph(currentBlockHeight)
+			}*/
 		}
 		simulator.RunTask()
 	}
@@ -87,12 +85,12 @@ func main() {
 	blocks = append(blocks, orphans...)
 
 	sort.SliceStable(blocks, func(i, j int) bool {
-		return simulator.GetTime(blocks[i]) < simulator.GetTime(blocks[j])
+		return blocks[i].GetTime() < blocks[j].GetTime()
 	})
 
 	for _, a := range orphans {
 		fmt.Print(a)
-		fmt.Println(":" + strconv.Itoa(simulator.GetHeight(a)))
+		fmt.Println(":" + strconv.Itoa(a.GetHeight()))
 	}
 
 	fmt.Println("")
@@ -109,13 +107,13 @@ func main() {
 	for _, b := range blocks {
 		if !simulator.ContainsBlock(orphans, b) {
 
-			_, err2 := f2.WriteString("OnChain : " + strconv.Itoa(simulator.GetHeight(b)) + " : " + strconv.Itoa(simulator.GetID(b)) + " ")
+			_, err2 := f2.WriteString("OnChain : " + strconv.Itoa(b.GetHeight()) + " : " + strconv.Itoa(b.GetID()) + " ")
 
 			if err2 != nil {
 				panic(err2)
 			}
 		} else {
-			_, err2 := f2.WriteString("Orphan : " + strconv.Itoa(simulator.GetHeight(b)) + " : " + strconv.Itoa(simulator.GetID(b)) + " ")
+			_, err2 := f2.WriteString("Orphan : " + strconv.Itoa(b.GetHeight()) + " : " + strconv.Itoa(b.GetID()) + " ")
 
 			if err2 != nil {
 				panic(err2)

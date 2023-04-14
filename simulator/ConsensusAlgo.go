@@ -15,13 +15,13 @@ func (ca *ConsensusAlgo) IsReceivedBlockValid(receivedBlock *Block, currentBlock
 		return false
 	}
 	receivedBlockHeight := receivedBlock.height
-	var receivedBlockParent *Block = &Block{}
-	if receivedBlockHeight >= 1 {
-		receivedBlockParent = receivedBlock.GetBlockWithHeight(receivedBlockHeight - 1)
-	} else {
+	var receivedBlockParent *Block
+	if receivedBlockHeight == 0 {
 		receivedBlockParent = nil
+	} else {
+		receivedBlockParent = receivedBlock.GetBlockWithHeight(receivedBlockHeight - 1)
 	}
-	return (receivedBlockHeight == 0 || receivedBlock.difficulty.Cmp(&receivedBlockParent.nextDifficulty) >= 0) && (reflect.ValueOf(currentBlock.parent).IsNil() || receivedBlock.totalDifficulty.Cmp(&currentBlock.totalDifficulty) > 0)
+	return (receivedBlockHeight == 0 || receivedBlock.difficulty.Cmp(receivedBlockParent.nextDifficulty) >= 0) && (reflect.ValueOf(currentBlock.parent).IsNil() || receivedBlock.totalDifficulty.Cmp(currentBlock.totalDifficulty) > 0)
 }
 
 func (ca *ConsensusAlgo) Minting() *MintingTask {

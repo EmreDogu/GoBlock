@@ -110,7 +110,6 @@ func putMessageTask(task *MessageTask) {
 
 func removeTask(this *MintingTask) {
 	_, ok := TaskMap[this]
-	// If the key exists
 	if ok {
 		for i := 0; i < len(Pq); i++ {
 			n := Pq[i]
