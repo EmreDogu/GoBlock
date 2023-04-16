@@ -17,7 +17,7 @@ type Block struct {
 }
 
 var genesisNextDifficulty *big.Int
-var latestid int
+var latestid int = 0
 
 func MakeBlock(parent *Block, minter *Node, time int64, difficulty *big.Int) *Block {
 	var height int

@@ -74,7 +74,7 @@ func main() {
 	averageOrphansSize := 0
 
 	for _, a := range simulator.GetSimulatedNodes() {
-		for _, b := range a.GetOrphans() {
+		for b := range a.GetOrphans() {
 			orphans = append(orphans, b)
 			averageOrphansSize += len(a.GetOrphans())
 		}

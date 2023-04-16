@@ -17,7 +17,7 @@ type Node struct {
 	routingTable      *RoutingTable
 	consensusAlgo     *ConsensusAlgo
 	block             *Block
-	orphans           []*Block
+	orphans           map[*Block]void
 	mintingTask       *MintingTask
 	sendingBlock      bool
 	messageQue        []*MessageTask
@@ -35,7 +35,7 @@ func MakeNode(nodeID int, numConnection int, region int, miningPower int, useCBR
 	node.consensusAlgo = &ConsensusAlgo{node}
 	node.block = &Block{}
 	node.mintingTask = &MintingTask{}
-	node.orphans = []*Block{}
+	node.orphans = map[*Block]void{}
 	node.messageQue = []*MessageTask{}
 	node.downloadingBlocks = map[*Block]void{}
 	return node
@@ -99,7 +99,7 @@ func (n *Node) ReceiveBlock(block *Block) {
 		n.AddToChain(block)
 		n.Minting()
 		n.SendInv(block)
-	} else if !ContainsBlock(n.orphans, block) && !block.IsOnSameChainAs(n.block) {
+	} else if !containsMapBlock(n.orphans, block) && !block.IsOnSameChainAs(n.block) {
 		n.AddOrphans(block, n.block)
 		arriveBlock(block, n)
 	}
@@ -110,7 +110,7 @@ func (n *Node) ReceiveMessage(message *MessageTask) {
 
 	if message.messageType == "InvMessageTask" {
 		block := message.block
-		if !ContainsBlock(n.orphans, block) && !containsMapBlock(n.downloadingBlocks, block) {
+		if !containsMapBlock(n.orphans, block) && !containsMapBlock(n.downloadingBlocks, block) {
 			if n.consensusAlgo.IsReceivedBlockValid(block, n.block) {
 				RecMessageTask(n, from, block, GetLatency(from.region, n.region)+10)
 				n.downloadingBlocks[block] = member
@@ -224,13 +224,8 @@ func (n *Node) AddToChain(block *Block) {
 
 func (n *Node) AddOrphans(orphanBlock *Block, validBlock *Block) {
 	if orphanBlock != validBlock {
-		n.orphans = append(n.orphans, orphanBlock)
-		for i := 0; i < len(n.orphans); i++ {
-			if n.orphans[i] == validBlock {
-				n.orphans[i] = n.orphans[len(n.orphans)-1]
-				n.orphans = n.orphans[:len(n.orphans)-1]
-			}
-		}
+		n.orphans[orphanBlock] = member
+		delete(n.orphans, validBlock)
 		if reflect.ValueOf(validBlock).IsNil() || orphanBlock.height > validBlock.height {
 			n.AddOrphans(orphanBlock.parent, validBlock)
 		} else if orphanBlock.height == validBlock.height {
@@ -260,7 +255,7 @@ func (n *Node) GetBlock() *Block {
 	return n.block
 }
 
-func (n *Node) GetOrphans() []*Block {
+func (n *Node) GetOrphans() map[*Block]void {
 	return n.orphans
 }
 
