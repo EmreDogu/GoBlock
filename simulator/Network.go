@@ -16,11 +16,11 @@ func GetDegreeDistribution() []float64 {
 	return settings.DEGREE_DISTRIBUTION_BITCOIN[:]
 }
 
-func GetLatency(from int, to int) float64 {
+func GetLatency(from int, to int) int64 {
 	mean := float64(settings.LATENCY[from][to])
 	shape := 0.2 * mean
 	scale := mean - 5
-	return math.Round(scale / math.Pow(rand.Float64(), 1/shape))
+	return int64(math.Round(scale / math.Pow(rand.Float64(), 1/shape)))
 }
 
 func GetBandwidth(from int, to int) int {

@@ -192,17 +192,17 @@ func (n *Node) SendNextBlockMessage() {
 				delay := settings.COMPACT_BLOCK_SIZE*8/(bandwidth/1000) + processingTime
 
 				// Send compact block message.
-				CmpctBlockMessageTask(n, to, block, float64(delay))
+				CmpctBlockMessageTask(n, to, block, int64(delay))
 			} else {
 				// Else use lagacy protocol.
 				delay := settings.BLOCK_SIZE*8/(bandwidth/1000) + processingTime
-				BlockMessageTask(n, to, block, float64(delay))
+				BlockMessageTask(n, to, block, int64(delay))
 			}
 		} else if n.messageQue[0].messageType == "GetBlockTxnMessageTask" {
 			// Else from requests missing transactions.
 			block := n.messageQue[0].block
 			delay := GetFailedBlockSize(n)*8/(bandwidth/1000) + processingTime
-			BlockMessageTask(n, to, block, float64(delay))
+			BlockMessageTask(n, to, block, int64(delay))
 		}
 
 		n.sendingBlock = true

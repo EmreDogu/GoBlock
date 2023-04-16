@@ -3,21 +3,20 @@ package simulator
 import (
 	"container/heap"
 	"reflect"
-	"time"
 )
 
 type ScheduledTask struct {
 	taskType      string
 	mintingTask   *MintingTask
 	messageTask   *MessageTask
-	scheduledTime float64
+	scheduledTime int64
 	index         int
 }
 type PriorityQueue []*ScheduledTask
 
 var TaskMap = make(map[any]*ScheduledTask)
 var Pq PriorityQueue = make(PriorityQueue, 0)
-var CurrentTime int = 0
+var CurrentTime int64 = 0
 
 func GetPriorityQueue() *PriorityQueue {
 	return &Pq
@@ -78,31 +77,31 @@ func (pq *PriorityQueue) Peek() *ScheduledTask {
 	return item
 }
 
-func (pq *PriorityQueue) updateMintingTask(item *ScheduledTask, task *MintingTask, scheduledTime float64) {
+func (pq *PriorityQueue) updateMintingTask(item *ScheduledTask, task *MintingTask, scheduledTime int64) {
 	item.mintingTask = task
 	item.scheduledTime = scheduledTime
 	heap.Fix(pq, item.index)
 }
 
-func (pq *PriorityQueue) updateMessageTask(item *ScheduledTask, task *MessageTask, scheduledTime float64) {
+func (pq *PriorityQueue) updateMessageTask(item *ScheduledTask, task *MessageTask, scheduledTime int64) {
 	item.messageTask = task
 	item.scheduledTime = scheduledTime
 	heap.Fix(pq, item.index)
 }
 
 func GetCurrentTime() int64 {
-	return time.Now().UnixMilli()
+	return CurrentTime
 }
 
 func putMintingTask(task *MintingTask) {
-	ScheduledTask := &ScheduledTask{"mintingTask", task, nil, float64(GetCurrentTime()) + task.interval, 0}
+	ScheduledTask := &ScheduledTask{"mintingTask", task, nil, GetCurrentTime() + task.interval, 0}
 	TaskMap[task] = ScheduledTask
 	heap.Push(&Pq, ScheduledTask)
 	Pq.updateMintingTask(ScheduledTask, ScheduledTask.mintingTask, ScheduledTask.scheduledTime)
 }
 
 func putMessageTask(task *MessageTask) {
-	ScheduledTask := &ScheduledTask{"messageTask", nil, task, float64(GetCurrentTime()) + task.interval, 0}
+	ScheduledTask := &ScheduledTask{"messageTask", nil, task, GetCurrentTime() + task.interval, 0}
 	TaskMap[task] = ScheduledTask
 	heap.Push(&Pq, ScheduledTask)
 	Pq.updateMessageTask(ScheduledTask, ScheduledTask.messageTask, ScheduledTask.scheduledTime)
@@ -120,7 +119,6 @@ func removeTask(this *MintingTask) {
 			}
 		}
 
-		heap.Init(&Pq)
 		delete(TaskMap, this)
 	}
 }
@@ -129,7 +127,7 @@ func RunTask() {
 	if Pq.Len() > 0 {
 		currentTask := GetScheduledTask()
 		heap.Pop(&Pq)
-		CurrentTime = int(currentTask.scheduledTime)
+		CurrentTime = currentTask.scheduledTime
 		delete(TaskMap, currentTask)
 		if reflect.ValueOf(currentTask.messageTask).IsNil() {
 			currentTask.mintingTask.Run()

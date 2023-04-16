@@ -33,8 +33,8 @@ func (ca *ConsensusAlgo) Minting() *MintingTask {
 	if p <= math.Pow(2, -53) {
 		return nil
 	} else {
-		return &MintingTask{selfNode, selfNode.block, math.Log(u) / math.Log(
-			1.0/p) / float64(selfNode.miningPower), difficulty, 0}
+		return &MintingTask{selfNode, selfNode.block, int64(math.Round(math.Log(u) / math.Log(
+			1.0/p) / float64(selfNode.miningPower))), difficulty, 0}
 	}
 }
 

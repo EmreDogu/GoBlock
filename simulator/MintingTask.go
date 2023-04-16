@@ -5,7 +5,7 @@ import "math/big"
 type MintingTask struct {
 	minter     *Node
 	parent     *Block
-	interval   float64
+	interval   int64
 	difficulty *big.Int
 	index      int
 }
