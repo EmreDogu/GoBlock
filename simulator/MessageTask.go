@@ -18,16 +18,6 @@ func BlockMessageTask(from *Node, to *Node, block *Block, interval int64) {
 	putMessageTask(task)
 }
 
-func CmpctBlockMessageTask(from *Node, to *Node, block *Block, interval int64) {
-	task := &MessageTask{"CmpctBlockMessageTask", from, to, block, interval}
-	putMessageTask(task)
-}
-
-func GetBlockTxnMessageTask(from *Node, to *Node, block *Block, interval int64) {
-	task := &MessageTask{"GetBlockTxnMessageTask", from, to, block, interval}
-	putMessageTask(task)
-}
-
 func InvMessageTask(from *Node, to *Node, block *Block, interval int64) {
 	task := &MessageTask{"InvMessageTask", from, to, block, interval}
 	putMessageTask(task)
@@ -39,7 +29,7 @@ func RecMessageTask(from *Node, to *Node, block *Block, interval int64) {
 }
 
 func (task *MessageTask) Run() {
-	if task.messageType == "BlockMessageTask" || task.messageType == "CmpctBlockMessageTask" {
+	if task.messageType == "BlockMessageTask" {
 		task.from.SendNextBlockMessage()
 
 		f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)

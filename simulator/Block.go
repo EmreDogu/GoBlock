@@ -14,6 +14,7 @@ type Block struct {
 	difficulty      *big.Int
 	totalDifficulty *big.Int
 	nextDifficulty  *big.Int
+	route           map[int][]int
 }
 
 var genesisNextDifficulty *big.Int
@@ -33,7 +34,7 @@ func MakeBlock(parent *Block, minter *Node, time int64, difficulty *big.Int) *Bl
 		totalDifficulty = parent.GetDifficulty().Add(parent.difficulty, difficulty)
 		nextDifficulty = parent.GetNextDifficulty()
 	}
-	block := &Block{latestid, height, parent, minter, time, difficulty, totalDifficulty, nextDifficulty}
+	block := &Block{latestid, height, parent, minter, time, difficulty, totalDifficulty, nextDifficulty, make(map[int][]int)}
 	latestid++
 	return block
 }

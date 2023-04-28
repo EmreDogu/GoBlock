@@ -12,10 +12,6 @@ func GetRegionDistribution() []float64 {
 	return settings.REGION_DISTRIBUTION_BITCOIN[:]
 }
 
-func GetDegreeDistribution() []float64 {
-	return settings.DEGREE_DISTRIBUTION_BITCOIN[:]
-}
-
 func GetLatency(from int, to int) int64 {
 	mean := float64(settings.LATENCY[from][to])
 	shape := 0.2 * mean

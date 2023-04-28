@@ -12,7 +12,7 @@ type MintingTask struct {
 
 func (task *MintingTask) Run() {
 	block := MakeBlock(task.parent, task.minter, GetCurrentTime(), task.difficulty)
-	task.minter.ReceiveBlock(block)
+	task.minter.ReceiveBlock(block, nil, task.minter)
 }
 
 func (task *MintingTask) GetParent() *Block {

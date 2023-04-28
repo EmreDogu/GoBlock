@@ -14,11 +14,17 @@ import (
 	simulator "simblockgolang/simulator"
 )
 
+var NUM_OF_BLOCKS int
+
+var CON_ALG int
+
+var NODE_LIST int
+
+var NUM_OF_CON int
+
 var simulationTime int64 = 0
 
 func main() {
-	start := time.Now().UnixMilli()
-	simulator.SetTargetInterval(settings.INTERVAL)
 
 	f, err := os.Create("output.json")
 
@@ -36,7 +42,45 @@ func main() {
 
 	simulator.PrintRegion()
 
-	constructNetworkWithAllNodes(settings.NUM_OF_NODES)
+	fmt.Print("Bu simülasyonda kaç tane düğüm oluşturulacağını girin: ")
+	fmt.Scan(&settings.NUM_OF_NODES)
+	fmt.Println("")
+
+	fmt.Print("Bu simülasyonda kaç tane blok kazılacağını girin: ")
+	fmt.Scan(&NUM_OF_BLOCKS)
+	fmt.Println("")
+
+	fmt.Print("Düğümlerin nasıl oluşturulacağını girin (1-rastgele, 2-özel, 3-bitnodes): ")
+	fmt.Scan(&NODE_LIST)
+	fmt.Println("")
+
+	if NODE_LIST != 1 {
+		fmt.Print("Düğümlerin hangi eş seçim yolu/algoritması ile bağlanacağını girin (1-özel, 2-randompair, 3-nearpair, 4-clusterpair, 5-halfpair, 6-nmfpair, 7-TwoContinentBCBSN, 8-BCBSN): ")
+		fmt.Scan(&CON_ALG)
+		fmt.Println("")
+	} else {
+		CON_ALG = 2
+	}
+
+	fmt.Print("Düğümlerin kaç tane dışarıya giden bağlantıya sahip olabileceğini girin: ")
+	fmt.Scan(&NUM_OF_CON)
+	fmt.Println("")
+
+	fmt.Print("Yakın komşu seçimi (proximity neighbor selection) algoritması aktifleştirilsin mi? (E-H): ")
+	fmt.Scan(&settings.NEIGH_SEL)
+	fmt.Println("")
+
+	if settings.NEIGH_SEL == "E" || settings.NEIGH_SEL == "e" {
+		settings.Matrix = make([][]int64, settings.NUM_OF_NODES)
+		for i := 0; i < settings.NUM_OF_NODES; i++ {
+			settings.Matrix[i] = make([]int64, settings.NUM_OF_NODES)
+		}
+	}
+
+	start := time.Now().UnixMilli()
+	simulator.SetTargetInterval(settings.INTERVAL)
+
+	constructNetworkWithAllNodes(settings.NUM_OF_NODES, NUM_OF_CON, NODE_LIST)
 
 	currentBlockHeight := 1
 
@@ -46,8 +90,13 @@ func main() {
 			if task.GetParent().GetHeight() == currentBlockHeight {
 				currentBlockHeight++
 			}
-			if currentBlockHeight > settings.END_BLOCK_HEIGHT {
+			if currentBlockHeight > NUM_OF_BLOCKS {
 				break
+			}
+			if currentBlockHeight%4 == 0 && (settings.NEIGH_SEL == "E" || settings.NEIGH_SEL == "e") {
+				for i := range simulator.GetSimulatedNodes() {
+					simulator.GetSimulatedNodes()[i].GetRoutingTable().ReconnectAll(settings.Matrix, settings.NUM_OF_NODES)
+				}
 			}
 			/*// Log every 100 blocks and at the second block
 			// TODO use constants here
@@ -58,7 +107,7 @@ func main() {
 		simulator.RunTask()
 	}
 
-	simulator.PrintAllPropagation()
+	simulator.PrintAllPropagation(settings.NUM_OF_NODES)
 
 	fmt.Println("")
 
@@ -172,55 +221,46 @@ func makeRandomListFollowDistribution(distribution []float64, facum bool) []int 
 	return list
 }
 
-func makeRandomList(rate float64) []bool {
-	list := []bool{}
-
-	for i := 0; i < settings.NUM_OF_NODES; i++ {
-		list = append(list, (float64(i) < float64(settings.NUM_OF_NODES)*rate))
-	}
-
-	rand.Shuffle(len(list), func(i, j int) {
-		list[i], list[j] = list[j], list[i]
-	})
-	return list
-}
-
 func genMiningPower() int {
-	r := rand.Float64()
+	r := 0 + rand.Float64()*(1-0)
 	return int(math.Max(r*float64(settings.STDEV_OF_MINING_POWER)+float64(settings.AVERAGE_MINING_POWER), 1))
 }
 
-func constructNetworkWithAllNodes(numNodes int) {
-	var regionDistribution []float64 = simulator.GetRegionDistribution()
-	var regionList []int = makeRandomListFollowDistribution(regionDistribution, false)
+func constructNetworkWithAllNodes(numNodes int, numCon int, nodeList int) {
+	id := 0
 
-	var degreeDistribution []float64 = simulator.GetDegreeDistribution()
-	var degreeList []int = makeRandomListFollowDistribution(degreeDistribution, true)
+	if nodeList == 1 {
+		var regionDistribution []float64 = simulator.GetRegionDistribution()
+		var regionList []int = makeRandomListFollowDistribution(regionDistribution, false)
 
-	var useCBRNodes []bool = makeRandomList(settings.CBR_USAGE_RATE)
+		for id = 0; id < numNodes-1; id++ {
+			node := simulator.MakeNode(id, numCon, strconv.Itoa(id), regionList[id], 0.0, 0.0, settings.RegionList[regionList[id]], genMiningPower(), settings.DOWNLOAD_BANDWIDTH[regionList[id]], settings.UPLOAD_BANDWIDTH[regionList[id]])
+			simulator.AddNode(node)
 
-	var churnNodes []bool = makeRandomList(settings.CHURN_NODE_RATE)
+			f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+			if err != nil {
+				panic(err)
+			}
 
-	for id := 1; id <= numNodes; id++ {
-		node := simulator.MakeNode(id, degreeList[id-1]+1, regionList[id-1], genMiningPower(), useCBRNodes[id-1], churnNodes[id-1])
-		simulator.AddNode(node)
+			defer f.Close()
 
-		f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			panic(err)
+			_, err2 := f.WriteString("{" + "\"kind\":\"add-node\"," + "\"content\":{" + "\"timestamp\":0," + "\"node-id\":" + strconv.Itoa(id) + "," + "\"region-id\":" + strconv.Itoa(regionList[id]) + "}" + "},")
+			if err2 != nil {
+				panic(err2)
+			}
 		}
-
-		defer f.Close()
-
-		_, err2 := f.WriteString("{" + "\"kind\":\"add-node\"," + "\"content\":{" + "\"timestamp\":0," + "\"node-id\":" + strconv.Itoa(id) + "," + "\"region-id\":" + strconv.Itoa(regionList[id-1]) + "}" + "},")
-		if err2 != nil {
-			panic(err2)
-		}
+	} else {
+		// json parselama gelecek
 	}
 
 	nodes := simulator.GetSimulatedNodes()
-	for i := range nodes {
-		nodes[i].JoinNetwork()
+
+	if CON_ALG < 7 && CON_ALG > 0 {
+		for i := range nodes {
+			nodes[i].JoinNetwork(CON_ALG)
+		}
+	} else if CON_ALG == 7 || CON_ALG == 8 {
+		nodes[0].JoinNetworkBCBSN(CON_ALG, nodes)
 	}
 
 	nodes[0].GenesisBlock()
