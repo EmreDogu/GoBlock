@@ -164,15 +164,8 @@ func (n *Node) mining() {
 }
 
 func (n *Node) sendBlock(newBlock *block.Block) {
-	for j := range n.routingTable.highoutbound {
-		bandwidth := configs.GetBandwidth(n.region, n.routingTable.highoutbound[j].GetRegion())
-		delay := int64(configs.COMPACT_BLOCK_SIZE*8/(bandwidth/1000) + processingTime)
-		task := p2p.CreateCmpctBlockTask(n, n.routingTable.highoutbound[j], newBlock, delay)
-		sl.simulator.PutTask(task)
-	}
-
-	for i := range n.routingTable.outbound {
-		task := p2p.CreateInvTask(n, n.routingTable.outbound[i], newBlock)
+	for i := range n.routingTable.GetNeighbors() {
+		task := p2p.CreateInvTask(n, n.routingTable.GetNeighbors()[i], newBlock)
 		sl.simulator.PutTask(task)
 	}
 }
@@ -277,7 +270,7 @@ func (n *Node) SendNextBlockMessage() {
 }
 
 func (n *Node) printAddBlock(block *block.Block) {
-	f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile("data/output/output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
 	}

@@ -12,7 +12,7 @@ func GetRegionDistribution() []float64 {
 }
 
 func PrintRegion() {
-	f, err := os.Create("static.json")
+	f, err := os.Create("data/output/static.json")
 
 	if err != nil {
 		panic(err)

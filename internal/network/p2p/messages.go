@@ -75,7 +75,7 @@ func (task *Messages) Run() {
 	if task.messageType == "block" || task.messageType == "cmpctblock" {
 		task.from.SendNextBlockMessage()
 
-		f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		f, err := os.OpenFile("data/output/output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
 			panic(err)
 		}

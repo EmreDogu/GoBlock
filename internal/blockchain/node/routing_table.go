@@ -1,9 +1,10 @@
 package node
 
 import (
-	"math/rand"
+	"bufio"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/EmreDogu/GoBlock/configs"
 )
@@ -29,21 +30,45 @@ func NewRoutingTable(node *Node, numCon int, numHighCon int) *RoutingTable {
 		highinbound:   []*Node{}}
 }
 
+func (r *RoutingTable) GetNeighbors() []*Node {
+	neighbors := make([]*Node, 0)
+	neighbors = append(neighbors, r.outbound...)
+	neighbors = append(neighbors, r.inbound...)
+	return neighbors
+}
+
 func (rt *RoutingTable) InitTable(simulatedNodes []*Node) {
-	candidates := make([]int, len(simulatedNodes))
-	for i := range candidates {
-		candidates[i] = i
+	file, err := os.Open("data/input/1000_20.txt")
+	if err != nil {
+		panic(err)
 	}
+	defer file.Close()
 
-	rand.Shuffle(len(candidates), func(i, j int) {
-		candidates[i], candidates[j] = candidates[j], candidates[i]
-	})
+	// Create a new scanner for the file
+	scanner := bufio.NewScanner(file)
 
-	for _, candidate := range candidates {
-		if len(rt.outbound) < rt.numConnection {
-			rt.AddNeighbor(simulatedNodes[candidate])
-		} else {
-			break
+	skipUntil := rt.selfNode.nodeID
+	currentLine := 0
+
+	// Read line by line
+	for scanner.Scan() {
+		currentLine++
+
+		if currentLine < skipUntil {
+			continue
+		}
+
+		line := scanner.Text()
+		info := strings.Split(line, ",")
+
+		for i := 2; i < len(info); i++ {
+			i, err := strconv.Atoi(info[i])
+
+			if err != nil {
+				// ... handle error
+				panic(err)
+			}
+			rt.AddNeighbor(simulatedNodes[i])
 		}
 	}
 }
@@ -67,7 +92,7 @@ func (rt *RoutingTable) AddNeighbor(to *Node) bool {
 }
 
 func (rt *RoutingTable) printAddLink(endNode *Node) {
-	f, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile("data/output/output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
 	}

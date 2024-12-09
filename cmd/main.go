@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strconv"
 	"time"
 
 	"github.com/EmreDogu/GoBlock/cmd/simulator"
 	"github.com/EmreDogu/GoBlock/configs"
-	"github.com/EmreDogu/GoBlock/internal/blockchain/block"
 )
 
 func main() {
@@ -20,7 +18,7 @@ func main() {
 	s := simulator.Simulator{}
 	s.InitializeSimulatorLink()
 
-	f, err := os.Create("output.json")
+	f, err := os.Create("data/output/output.json")
 
 	if err != nil {
 		panic(err)
@@ -40,9 +38,11 @@ func main() {
 
 	simulator.Simulation(configs.END_BLOCK_HEIGHT)
 
-	simulator.PrintAllPropagation()
+	simulator.Statistics()
 
-	fmt.Println("")
+	//simulator.PrintAllPropagation()
+
+	/*fmt.Println("")
 
 	blocks := make([]*block.Block, 0)
 	orphans := make([]*block.Block, 0)
@@ -77,7 +77,7 @@ func main() {
 	}
 	fmt.Println(averageOrphansSize)
 
-	f2, err := os.Create("blockList.txt")
+	f2, err := os.Create("data/output/blockList.txt")
 
 	if err != nil {
 		panic(err)
@@ -100,9 +100,9 @@ func main() {
 				panic(err2)
 			}
 		}
-	}
+	}*/
 
-	f3, err := os.OpenFile("output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f3, err := os.OpenFile("data/output/output.json", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
 	}
